@@ -5,4 +5,4 @@ WORKDIR /app/
 ADD ./ /app/
 EXPOSE 8080
 
-RUN npm install && ls /
+RUN npm install
