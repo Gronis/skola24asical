@@ -1,0 +1,1 @@
+console.log("Hello skola24.se!")

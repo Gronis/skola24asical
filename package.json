@@ -1,0 +1,12 @@
+{
+    "name": "skola24asical",
+    "version": "0.1.0",
+    "description": "Converts skola24 to ical format",
+    "repository": "https://github.com/Gronis/skola24asical.git",
+    "author": "Robin Grönberg <robin.gronberg@gmail.com>",
+    "license": "MIT",
+    "devDependencies": {},
+    "dependencies": {
+        "ics": "2.0.1"
+    }
+}
