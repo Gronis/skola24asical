@@ -11,7 +11,7 @@ function main(){
     var app = express()
 
     app.get('/', (req, res) => {
-        res.send('hello world')
+        res.send('Använd denna sida för att kunna prenumerera på ett schema av skola24.se i ical format. See projektet på github: <a href="https://github.com/Gronis/skola24asical">https://github.com/Gronis/skola24asical</a>')
     })
 
     app.get('/schedule/:domain/:schoolGuid/:groupGuid', (req, res) => {
