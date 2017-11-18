@@ -1,32 +1,78 @@
-const ics = require('ics')
+const ical = require('ical-generator')
 const http = require('http')
 const request = require('request');
+const moment = require('moment-timezone');
+const util = require('util')
+const express = require('express')
+const async = require('async')
 
 function main(){
+
+    var app = express()
+
+    app.get('/', (req, res) => {
+        res.send('hello world')
+    })
+
+    app.get('/schedule/:domain/:schoolGuid/:groupGuid', (req, res) => {
+        const domain = req.params.domain
+        const school = { "Guid": req.params.schoolGuid }
+        const group = { "Guid": req.params.groupGuid }
+        weeks = [0, 1, 2, 3, 4].map(x => x + moment().isoWeek())
+        console.log(domain, school, group)
+        counter = weeks.length
+        all_events = []
+
+        weeks.map(week => get_events(domain, school, group, week, (events) => {
+            console.log(events)
+            all_events = all_events.concat(events)
+            counter--
+            if (counter == 0){
+                console.log("Sending", all_events)
+                res.send(transform_to_ics_events(all_events))
+            }
+        }))
+    })
+
+    app.listen(8080, () => console.log('Started!'))
+
+    /*
+    const school = {
+        "Guid": "c7a07cfd-25b1-439d-a37c-10638e2be616"
+    }
+    const group = {
+        "Guid": "a9ff834a-dcdf-4e39-afdb-583f7e6c58d1"
+    }
+
+    const domain = "goteborg.skola24.se"
+
+    get_events(domain, school, group, (events) => {
+        ical_text = transform_to_ics_events(events)
+    })*/
+}
+
+function get_events(domain, school, group, week, callback) {
+    console.log(week)
+
+    const re_weekday = /(Måndag)|(Tisdag)|(Onsdag)|(Torsdag)|(Fredag)/i
+    const re_time = /\d*:\d*/i
+    const re_text = /\X*/i
+    const re_room = /\*/i
+    const star = /\*/g
+    const multi_space = / +/g
+
     const body = {
         "request": {
-            "selectedSchool": {
-                "Name": "Yrgo Lärdomsgatan",
-                "Guid": "c7a07cfd-25b1-439d-a37c-10638e2be616",
-                "Settings": {
-                    "AllowTimetableForStudent": true
-                }
-            },
+            "selectedSchool": school,
             "selectedTeacher": null,
-            "selectedGroup": {
-                "Id": "Bp16",
-                "Guid": "c5d4ceb8-7a32-418e-9bb8-c6528c9e6fdc"
-            },
+            "selectedGroup": group,
             "selectedRoom": null,
-            "selectedSignatures": {
-                "Signature": ""
-            },
             "selectedPeriod": null,
-            "selectedWeek": 47,
+            "selectedWeek": week,
             "headerEnabled": false,
             "footerEnabled": false,
             "blackAndWhite": false,
-            "domain": "goteborg.skola24.se",
+            "domain": domain,
             "divWidth": 500, "divHeight": 500
         }
     }
@@ -40,14 +86,7 @@ function main(){
         body: JSON.stringify(body)
     };
 
-    const re_weekday = /(Måndag)|(Tisdag)|(Onsdag)|(Torsdag)|(Fredag)/i
-    const re_time = /\d*:\d*/i
-    const re_text = /\X*/i
-    const re_room = /\*/i
-    const star = /\*/g
-    const multi_space = / +/g
-
-    request.post(options, function (error, response, body){
+    return request.post(options, function (error, response, body){
 
         const vertical_match = (rect, list) => list.filter(item => item.x > rect.x1
                                                                 && item.x < rect.x2)
@@ -62,15 +101,13 @@ function main(){
 
         res = JSON.parse(body)
 
-        //console.log(res.textList)
-
         weekdays = res.textList.filter(e => e.text.match(re_weekday))
         times = res.textList.filter(e => e.text.match(re_time))
         texts = res.textList.filter(e => e.text.match(re_text) &&
                                        !e.text.match(re_weekday) &&
                                        !e.text.match(re_time) && e.text.length > 0)
 
-        descriptions = texts.filter(e => !e.text.match(re_room))
+        titles = texts.filter(e => !e.text.match(re_room))
         rooms = texts.filter(e => e.text.match(re_room))
 
         times_start = times.filter((e, i) => i % 2 == 0)
@@ -91,43 +128,42 @@ function main(){
             })
             .filter(event => event.width > 0 && event.width < 200)
             .map(event => {
-                event.description = text(inside(event, descriptions))
+                event.title = text(inside(event, titles))
                 event.room = text(inside(event, rooms))
                 event.day = text(vertical_match(event, weekdays))
                 return event
             })
 
-        console.log(events)
+        callback(events)
     })
-
 }
 
+function transform_to_ics_events(events){
+    const re_date = /\d*\/\d*/i
+    const year = new Date().getFullYear()
+    const fix_timezone = (date) => moment.tz(date, "Europe/Stockholm").clone().tz("Europe/London").toDate()
 
-function create_ics_event(params) {
-    const event = {
-        start: [2018, 5, 30, 6, 30],
-        duration: { hours: 6, minutes: 30 },
-        title: 'Bolder Boulder',
-        description: 'Annual 10-kilometer run in Boulder, Colorado',
-        location: 'Folsom Field, University of Colorado (finish line)',
-        url: 'http://www.bolderboulder.com/',
-        geo: { lat: 40.0095, lon: 105.2669 },
-        categories: ['10k races', 'Memorial Day Weekend', 'Boulder CO'],
-        status: 'CONFIRMED',
-        organizer: { name: 'Admin', email: 'Race@BolderBOULDER.com' },
-        attendees: [
-            { name: 'Adam Gibbons', email: 'adam@example.com' },
-            { name: 'Brittany Seaton', email: 'brittany@example2.org' }
-        ]
-    }
+    ics_events = events.map(e => {
+        const date = new String(e.day.match(re_date)).split('/').reverse().map(x => parseInt(x))
+        const start = e.start.split(":").map(x => parseInt(x))
+        const end = e.end.split(":").map(x => parseInt(x))
+        const start_date = fix_timezone([year, date[0]-1, date[1], start[0], start[1]])
+        const end_date = fix_timezone([year, date[0]-1, date[1], end[0], end[1]])
 
-    ics.createEvent(event, (error, value) => {
-        if (error) {
-            console.log(error)
+        event = {
+            summary: e.title,
+            location: e.room,
+            start: start_date,
+            end: end_date
         }
-
-        console.log(value)
+        return event
     })
+    cal = ical({
+        domain: 'example.net',
+        timezone: 'Europe/Stockholm'
+    })
+    cal.events(ics_events)
+    return cal.toString()
 }
 
 main()

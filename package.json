@@ -7,7 +7,10 @@
     "license": "MIT",
     "devDependencies": {},
     "dependencies": {
-        "ics": "2.0.1",
-        "request": "2.83.0"
+        "request": "2.83.0",
+        "ical-generator": "0.2.0",
+        "moment-timezone": "0.5.14",
+        "express": "4.16.2",
+        "async": "2.6.0"
     }
 }
