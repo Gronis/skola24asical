@@ -10,9 +10,13 @@ services:
     environment:
       - VIRTUAL_HOST=skola24.robingronberg.se
       - VIRTUAL_PORT=8080
-      - LETSENCRYPT_HOST=skola24.robingronberg..se
+      - LETSENCRYPT_HOST=skola24.robingronberg.se
       - LETSENCRYPT_EMAIL=robingronberg@gmail.com
       - VIRTUAL_NETWORK=nginx-proxy
     entrypoint: node app.js
     networks:
       - proxy-tier
+networks:
+  proxy-tier:
+    external:
+      name: "nginx-proxy"
