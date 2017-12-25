@@ -18,13 +18,13 @@ function main(){
         const domain = req.params.domain
         const school = { "Guid": req.params.schoolGuid }
         const group = { "Guid": req.params.groupGuid }
-        weeks = [0, 1, 2, 3, 4].map(x => x + moment().isoWeek())
-        console.log(domain, school, group)
+        weeks = [0, 1, 2, 3, 4].map(x => (x + moment().isoWeek()) % 52).map(x => x == 0? 52 : x)
+        console.log("Fetching schedule for ", domain, school, group)
+        console.log("During weeks: ", weeks)
         counter = weeks.length
         all_events = []
 
         weeks.map(week => get_events(domain, school, group, week, (events) => {
-            console.log(events)
             all_events = all_events.concat(events)
             counter--
             if (counter == 0){
@@ -52,8 +52,6 @@ function main(){
 }
 
 function get_events(domain, school, group, week, callback) {
-    console.log(week)
-
     const re_weekday = /(Måndag)|(Tisdag)|(Onsdag)|(Torsdag)|(Fredag)/i
     const re_time = /\d*:\d*/i
     const re_text = /\X*/i
