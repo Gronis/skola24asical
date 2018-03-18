@@ -110,6 +110,16 @@ function get_events(domain, school, group, week, callback) {
 
         times_start = times.filter((e, i) => i % 2 == 0)
         times_end = times.filter((e, i) => i % 2 == 1)
+
+        // If start and end-times are more than start-times, something is fishy
+        // Known reasons:
+        //      - collisions in schedule
+        //
+        // Just skip those weeks, for now
+        if (times_start.length > times_end.length){
+            return callback([])
+        }
+
         events = times_start
             .map((e, i) => {
                 o = {
