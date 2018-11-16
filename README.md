@@ -6,6 +6,8 @@ It is build using docker (for hosting) and nodejs
 
 I made this for my brother so that he is not forced to add the entries manually from skola24.
 
+### NOTE: Skola24 has recently (Nov 2018) changed their internal rendering API, so at the moment this implementation does not work. Will update to the new API when I have the time to do it.
+
 ## Usage:
 ```web
 https://skola24.robingronberg.se/schedule/:domain/:schoolGuid/:groupGuid
