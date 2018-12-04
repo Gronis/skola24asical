@@ -6,8 +6,6 @@ It is build using docker (for hosting) and nodejs
 
 I made this for my brother so that he is not forced to add the entries manually from skola24.
 
-### NOTE: Skola24 has recently (Nov 2018) changed their internal rendering API, so at the moment this implementation does not work. Will update to the new API when I have the time to do it.
-
 ## Usage:
 ```web
 https://skola24.robingronberg.se/schedule/:domain/:schoolGuid/:groupGuid
@@ -35,6 +33,6 @@ I would be happy if you contribute! Just send me a pull request!
 
 ## TODO
 
-* Make a tutorial like homepage how to use the service (with buttons to select variables, etc)
+* Make a tutorial like homepage how to use the service (with buttons to select school, class, etc)
 * Add support for schedules with collisions
-* When close to a new year, add support to search for week 1+ (instead of 53+, which do not exist)
+* (Fixed) When close to a new year, add support to search for week 1+ (instead of 53+, which do not exist)
